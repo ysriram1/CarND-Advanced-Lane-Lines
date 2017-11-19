@@ -56,6 +56,7 @@ The specific goals / steps of this project are the following:
 - numpy
 - os
 - itertools
+- traceback
 
 
 ## Camera Calibration
@@ -158,16 +159,28 @@ Now these two points on the x-axis are used to constructed sliding windows of a 
 ![][image10]
 
 
-### Calculating Curvature
+### Calculating Curvature and Deviation from Lane Center
 
 *Code: `add_curvature_info()`*
 
-Using the coefficients of the polynomial line we fit to the lanes, we calculate the curvature of the two lanes. The following formula was used:
+We first converted the pixel locations of x and y to meters and than used these values to fit two polynomial lines -- one for left and another for right. Then we calculated the curvature of the two lanes. The following formula was used:
 
-`curvature_left = ((1 + (2*fit[0]*y_ +
+`curvature = ((1 + (2*fit[0]*y_ +
                     fit[1])**2)**1.5) / np.absolute(2*fit[0])`
 
-Here, fit is a numpy array containing the coefficients of the second order polynomial applied to the valid pixels on each side.
+Here, fit is a numpy array containing the coefficients of the second order polynomial applied to the valid pixels on each side (after converting into meters). The average curvature of the two lanes is reported as the curve radius.
+
+The deviation from the center of the lane is calculated using the following lines of code:
+
+```
+y_max = np.max(ploty)
+camera_position = img.shape[1]/2
+lane_center = (right_fitx[-1] + left_fitx[-1])/2 # at the bottom of the screen
+center_offset = (camera_position - lane_center)*x_m_pix*100 # in cm
+return_list.append(center_offset)
+```
+We estimate the location of the vehicle by taking the mid point of the image. And the center of the land is calculated by get center point of the lowest two horizontal values of the lanes. The difference between the two scaled to centimeters gives us the offset.
+
 
 ### Final Output
 
